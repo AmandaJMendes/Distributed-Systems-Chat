@@ -2,11 +2,17 @@ const socket = new WebSocket('ws://localhost:3000')
 
 function sendMessage(e){
     e.preventDefault()
-    const input = document.querySelector('#msg')
-    const name  = document.querySelector('#username')
-    if (input.value){
-        socket.send(name.value + ": " + input.value)
-        input.value = ""
+    const form = document.getElementById('myForm');
+    const formData = {};
+    for (let element of form.elements) {
+        if (element.name) {
+            formData[element.name] = element.value;
+        }
+    }
+    
+    if (formData["action"]){
+        const jsonData = JSON.stringify(formData);
+        socket.send(jsonData)
     }
     input.focus()
 }
