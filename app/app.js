@@ -2,6 +2,7 @@ const socket = new WebSocket('ws://localhost:3000')
 
 function sendMessage(e){
     e.preventDefault()
+
     const form = document.getElementById('myForm');
     const formData = {};
     for (let element of form.elements) {
@@ -11,10 +12,11 @@ function sendMessage(e){
     }
     
     if (formData["action"]){
+        console.log(213123)
         const jsonData = JSON.stringify(formData);
         socket.send(jsonData)
     }
-    input.focus()
+    //input.focus()
 }
 
 document.querySelector('form').addEventListener('submit', sendMessage)

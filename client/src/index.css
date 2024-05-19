@@ -1,0 +1,33 @@
+:root {
+  --theme: #8700D5;
+  --theme-light: #BA80DC;
+  --theme-dark: #470070;
+  --bg: #23272E;
+  --bg-light: #2C333B;
+  --white: #bdc0c3;
+  --gray: #768390;
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: var(--white);
+  background-color: var(--bg);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  outline: none;
+}
+
+button:hover, link:hover {
+  cursor: pointer;
+}
+
