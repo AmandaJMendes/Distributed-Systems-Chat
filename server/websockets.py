@@ -12,6 +12,7 @@ def parse_headers(request):
 
 def websocket_handshake(client_socket, headers):
     websocket_key = headers['Sec-WebSocket-Key']
+    
     accept_key = base64.b64encode(hashlib.sha1((websocket_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").encode()).digest()).decode('utf-8')
     response = (
         "HTTP/1.1 101 Switching Protocols\r\n"
@@ -20,4 +21,5 @@ def websocket_handshake(client_socket, headers):
         f"Sec-WebSocket-Accept: {accept_key}\r\n"
         "\r\n"
     )
+    
     client_socket.send(response.encode('utf-8'))

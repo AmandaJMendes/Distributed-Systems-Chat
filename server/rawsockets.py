@@ -2,6 +2,7 @@ import struct
 
 def receive_message(client_socket):
     data = client_socket.recv(2)
+    
     if not data:
         return None
     length = data[1] & 127
