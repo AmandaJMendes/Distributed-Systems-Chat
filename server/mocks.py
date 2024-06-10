@@ -1,5 +1,5 @@
 chats = {
-    1: {
+    "e57c7635-9779-452e-80c9-d314fdf20dc0": {
         "name": "Grupo a",
         "messages": [
             {
@@ -35,7 +35,7 @@ chats = {
         ],
         "users": [1, 2, 3],
     },
-    2: {
+    "e57c7635-9779-452e-80c9-d314fdf20dc1": {
         "name": "Grupo b",
         "messages": [
             {

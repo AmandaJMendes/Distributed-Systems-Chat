@@ -14,3 +14,8 @@ def update_users(_id, original_user):
         
         file.seek(0)
         file.write(dumps(users))
+
+def get_users():
+    with open("disk/disk.json") as file:
+        return load(file)
+        
