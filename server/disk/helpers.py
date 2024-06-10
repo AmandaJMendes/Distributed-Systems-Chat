@@ -18,4 +18,13 @@ def update_users(_id, original_user):
 def get_users():
     with open("disk/disk.json") as file:
         return load(file)
+    
+def update_chats(chats):
+    with open("disk/chats.json", "r+") as file:
+        file.seek(0)
+        file.write(dumps(chats))
+
+def get_chats():
+    with open("disk/chats.json") as file:
+        return load(file)
         

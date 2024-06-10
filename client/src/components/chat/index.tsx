@@ -35,6 +35,7 @@ export function Chat() {
             action: "send",
             user_id: user.user_id,
             user_name: user.user_name,
+            user_url: user.user_url,
             chat_id: chatId,
             message
         }));
@@ -45,14 +46,24 @@ export function Chat() {
         return new Date(date).toLocaleString();
     }
 
-    const getUserColor = (user_id: number) => {
-        if (user_id === user.user_id) return "#ffffff";
-        const index = user_id % 6;
+    const getUserColor = (user_name: string) => {
+        if (user_name === user.user_name) return "#ffffff";
+        const index = user_name.length % 6;
         return colors[index];
     }
 
     const handleKeyDown = async (e: KeyboardEvent) => {
         if (e.key === "Enter") send();
+    }
+
+    const getChatName = () => {
+        if (!Object.keys(data.current_chat).length) return;
+        if (data.current_chat.group){
+            return data.current_chat.name;
+        }
+
+        const index = data.current_chat.users.indexOf(user.user_id);
+        return data.current_chat.name.split("|")[1-index];
     }
 
     if (data.current_chat.length === 0) {
@@ -66,15 +77,15 @@ export function Chat() {
         <main>
             <div className='header'>
                 <img src="/user.png" alt="user placeholder" className='image' />
-                <span>{data.current_chat[0].name}</span>
+                <span>{getChatName()}</span>
                 <span className='display-time' onClick={_ => setShowTimestamp(!showTimestamp)}>Mostrar hora do envio</span>
             </div>
             <div className='chat' id='chat'>
-                {data.current_chat[0].messages && data.current_chat[0].messages.map((message: any) => (
+                {Object.keys(data.current_chat).length && data.current_chat.messages.map((message: any) => (
                     <div className={`message-container ${message.user_id === user.user_id && "own-user"}`} key={message.timestamp}>
-                        <img src={message.user_url ?? "/user.png"} alt="user placeholder" className='image' />
+                        <img src={message.user_url ? message.user_url  : "/user.png"} alt="user placeholder" className='image' />
                         <p className='text'>
-                            <span className='user' style={{ color: getUserColor(message.user_id) }}>{message.user_name}</span>
+                            <span className='user' style={{ color: getUserColor(message.user_name) }}>{message.user_name}</span>
                             <span>{message.text}</span>
                             {showTimestamp && <span className='timestamp'>{formatDate(message.timestamp)}</span>}
                         </p>

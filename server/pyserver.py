@@ -7,13 +7,11 @@ import uuid
 from rawsockets import receive_message, send_message
 from websockets import parse_headers, websocket_handshake
 from messages import format_chats
-from mocks import chats as mocked_chat
 
-from disk.helpers import update_users, get_users
+from disk.helpers import update_users, get_users, update_chats, get_chats
 
-#users = {}  # keys: user id | values: username
-chats = mocked_chat
-server_users = {}
+# chats -> keys: chat id | values: {"messages": [(user_id, timestamp, text)], "users": [(user_id)]}
+server_users = {} # keys: user id | values: username
 
 
 def parse_message(message, websocket):
@@ -22,28 +20,48 @@ def parse_message(message, websocket):
 
     if action == "login":
         user_id = data.get("user_id",  str(uuid.uuid4()))
+        user = {
+            "user_id": user_id,
+            "name": data.get("name"),
+            "email": data.get("email"),
+            "url": data.get("url"),
+        }
+        
+        # Create user and send his DM to others
         if not data.get("user_id"):
+            chats = get_chats()
+            for server_user_id in server_users.keys():
+                chats[str(uuid.uuid4())] = {
+                    "name": f"{data.get("name")}|{server_users.get(server_user_id).get("name")}",
+                    "group": False,
+                    "messages": [],
+                    "users": [user_id, server_user_id],
+                }
+                
+                server_user_conn = server_users.get(server_user_id).get("connection", None)
+                if server_user_conn:
+                    send_message(server_user_conn, format_chats(chats, "chats", server_user_id))
+            
+            update_chats(chats)
             send_message(
                 websocket,
                 json.dumps(
                     {
-                        "payload": {"user_id": user_id, "name": data.get("name"), "email": data.get("email")},
+                        "payload": user,
                         "action": "login",
                     }
                 ),
             )
         
-        user = {
-            "name": data.get("name"),
-            "email": data.get("email"),
-            "url": data.get("url"),
-            "connection": websocket,
-        }
+        # Persist user and update connection
+        user["connection"] = websocket
+        user.pop("user_id")
         server_users[user_id] = user
         update_users(user_id, user)
 
+
     elif action == "list_chats":
-        send_message(websocket, format_chats(chats, "chats"))
+        send_message(websocket, format_chats(get_chats(), "chats", data.get("user_id")))
         
     #elif action == "logout":
     #    user_id = data.get("user_id")
@@ -53,20 +71,17 @@ def parse_message(message, websocket):
     #            chats[chat_id]["users"] = [
     #                uid for uid in chats[chat_id]["users"] if uid != user_id
     #            ]
-    #elif action == "create":
-    #    chats[str(uuid.uuid4())] = {
-    #        "name": data["name"],
-    #        "messages": [],
-    #        "users": [data["user_id"]],
-    #    }
         
     elif action == "join":
         chat_id = data.get("chat_id")
         user_id = data.get("user_id")
-        if chat_id in chats:
-            chats[chat_id]["users"].append(user_id)
-            # send_message(websocket, json.dumps(chats[chat_id]))
+        chats = get_chats()
 
+        # This if will be used to add user to groups
+        if chat_id in chats and user_id not in chats.get(chat_id).get("users"):
+            chats[chat_id]["users"].append(user_id)
+            update_chats(chats)
+        
         send_message(
             websocket,
             format_chats(
@@ -81,9 +96,11 @@ def parse_message(message, websocket):
     #        chats[chat_id]["users"] = [
     #            uid for uid in chats[chat_id]["users"] if uid != user_id
     #        ]
+
     elif action == "send":
         user_id = data.get("user_id")
         chat_id = data.get("chat_id")
+        chats = get_chats()
         
         msg = {
             "user_id": user_id,
@@ -92,18 +109,9 @@ def parse_message(message, websocket):
             "timestamp": int(time.time() * 1000),
             "text": data.get("message"),
         }
-        if chat_id not in chats and user_id in server_users:
-            _id = str(uuid.uuid4())
-            chats[_id] = {
-                "name": f"Chat {_id}",
-                "messages": [msg],
-                "users": [user_id, chat_id],
-            }
-            msg["chat_id"] = _id
-            chat_id = _id
             
-        else:
-            chats.get(chat_id).get("messages").append(msg)
+        chats.get(chat_id).get("messages").append(msg)
+        update_chats(chats)
 
         for usr_id in chats.get(chat_id, {}).get("users", []):
             client = server_users.get(usr_id, {}).get("connection")
@@ -115,10 +123,9 @@ def parse_message(message, websocket):
                         chats, "current_chat", send_messages=True, chat_id=chat_id
                     ),
                 )
-
-
+        
 def handle_client(client_socket):
-    print("Client")
+    print("New client connected")
     request = client_socket.recv(1024).decode("utf-8")
     headers = parse_headers(request)
     websocket_handshake(client_socket, headers)
