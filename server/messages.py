@@ -1,6 +1,6 @@
 import json
 
-def format_chats(chats: dict, action, user_id=None, send_messages = False, chat_id=None):
+def format_chats(chats: dict, action, user_id=None, send_messages = False, chat_id = None):
     payload = []
     for key in chats.keys():
         # Filter specific chat. Used for retrieving the active chat
@@ -32,6 +32,5 @@ def format_chats(chats: dict, action, user_id=None, send_messages = False, chat_
                 "image": chats[key]["image"]
             }
         )
-    
+
     return json.dumps({ "action": action, "payload": payload})
-    

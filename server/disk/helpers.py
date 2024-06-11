@@ -20,8 +20,7 @@ def get_users():
         return load(file)
     
 def update_chats(chats):
-    with open("disk/chats.json", "r+") as file:
-        file.seek(0)
+    with open("disk/chats.json", "w") as file:
         file.write(dumps(chats))
 
 def get_chats():

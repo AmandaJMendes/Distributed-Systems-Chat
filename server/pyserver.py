@@ -11,7 +11,7 @@ from messages import format_chats
 from disk.helpers import update_users, get_users, update_chats, get_chats
 
 # chats -> keys: chat id | values: {"messages": [(user_id, timestamp, text)], "users": [(user_id)]}
-server_users = {} # keys: user id | values: username
+signed_users = {} # keys: user id | values: username
 
 
 def parse_message(message, websocket):
@@ -46,13 +46,14 @@ def parse_message(message, websocket):
                     "name": f"{data.get("name")}|{signed_user.get("name")}",
                     "group": False,
                     "messages": [],
-                    "users": [user_id, server_user_id],
+                    "users": [user_id, signed_user_id],
                     "image": [data.get("url"), signed_user.get("url")]
                 }
                 
-                server_user_conn = server_users.get(signed_user_id, {}).get("connection")
+                server_user_conn = signed_users.get(signed_user_id, {}).get("connection")
+                print(signed_user_id, server_user_conn)
                 if server_user_conn:
-                    send_message(server_user_conn, format_chats(chats, "chats", server_user_id))
+                    send_message(server_user_conn, format_chats(chats, "chats", signed_user_id))
             
             update_chats(chats)
         
@@ -70,40 +71,61 @@ def parse_message(message, websocket):
         # Persist user and update connection
         user["connection"] = websocket
         user.pop("user_id")
-        server_users[user_id] = user
+        signed_users[user_id] = user
         update_users(user_id, user)
 
     elif action == "list_chats":
         send_message(websocket, format_chats(get_chats(), "chats", data.get("user_id")))
         
     elif action == "logout":
-        if data.get("user_id", None) in server_users:
-            del server_users[user_id]
+        if data.get("user_id", None) in signed_users:
+            del signed_users[user_id]
         
     elif action == "join":
         chat_id = data.get("chat_id")
-        user_id = data.get("user_id")
-        chats = get_chats()
-
-        # This if will be used to add user to groups
-        if chat_id in chats and user_id not in chats.get(chat_id).get("users"):
-            chats[chat_id]["users"].append(user_id)
-            update_chats(chats)
         
         send_message(
             websocket,
             format_chats(
-                chats, "current_chat", send_messages=True, chat_id=chat_id
+                get_chats(), "current_chat", send_messages=True, chat_id=chat_id
             ),
         )
 
-    #elif action == "leave":
-    #    chat_id = data.get("chat_id")
-    #    user_id = data.get("user_id")
-    #    if chat_id in chats:
-    #        chats[chat_id]["users"] = [
-    #            uid for uid in chats[chat_id]["users"] if uid != user_id
-    #        ]
+    elif action == "create_group":
+        chats = get_chats()
+        chats[str(uuid.uuid4())] = {
+            "name": data.get("name"),
+            "group": True,
+            "messages": [],
+            "users": [data.get("user_id")],
+            "image": [data.get("url")]
+        }
+
+        update_chats(chats)
+    
+        for server_user_id in signed_users.keys():
+            conn = signed_users.get(server_user_id).get("connection")
+            if conn:
+                send_message(conn, format_chats(get_chats(), "chats", user_id=server_user_id))
+
+    elif action == "leave":
+        chat_id = data.get("chat_id")
+        user_id = data.get("user_id")
+        chats = get_chats()
+    
+        if chats.get(chat_id):
+            chats.get(chat_id)["users"] = [
+                uid for uid in chats.get(chat_id)["users"] if uid != user_id
+            ]
+            
+            send_message(
+                websocket,
+                format_chats(
+                    chats, "current_chat", send_messages=True, chat_id=chat_id
+                ),
+            )
+               
+            update_chats(chats)
 
     elif action == "send":
         user_id = data.get("user_id")
@@ -119,10 +141,13 @@ def parse_message(message, websocket):
         }
             
         chats.get(chat_id).get("messages").append(msg)
+        if chats.get(chat_id).get("group") and user_id not in chats.get(chat_id).get("users"):
+            chats.get(chat_id).get("users").append(user_id)
+
         update_chats(chats)
 
         for usr_id in chats.get(chat_id, {}).get("users", []):
-            client = server_users.get(usr_id, {}).get("connection")
+            client = signed_users.get(usr_id, {}).get("connection")
 
             if client:
                 send_message(
@@ -141,7 +166,7 @@ def handle_client(client_socket):
         try:
             message = receive_message(client_socket)
             if message:
-                print(message)
+                # print(message)
                 parse_message(message, client_socket)
             else:
                 break
