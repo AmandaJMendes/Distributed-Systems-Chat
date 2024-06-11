@@ -1,13 +1,17 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
-import { FiLogOut, FiRss, FiPlusCircle } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import { FiLogOut, FiRss, FiPlusCircle, FiX } from "react-icons/fi";
 import { useUser } from "../../context/user";
+import Modal from 'react-modal';
 
 import "./styles.scss"
 
 export function SideNav() {
     const { user, logout, data, client } = useUser();
     const navigate = useNavigate();
+    const [open, setOpen] = useState(false);
+    const [name, setName] = useState("");
+    const [url, setUrl] = useState("");
 
     useEffect(() => {
         if (!user.user_id) {
@@ -30,6 +34,18 @@ export function SideNav() {
     const handleLogout = () => {
         logout(user.user_id);
         navigate("/login");
+    }
+
+    const handleCreateGroup = () => {
+        client.send(JSON.stringify({
+            action: "create_group",
+            name,
+            url,
+            user_id: user.user_id
+        }));
+        setName("");
+        setUrl("");
+        setOpen(false);
     }
 
     const getChatName = (chat: any) => {
@@ -56,9 +72,9 @@ export function SideNav() {
                 {client && client.readyState === client.OPEN &&
                     <div className="status">
                         <span className="connected">
-                            Conectado
+                            Conectado - {user.user_name}
                         </span>
-                        <FiPlusCircle className="icon" onClick={handleLogout} />
+                        <FiPlusCircle className="icon" onClick={ _ => setOpen(true) } />
                         <FiLogOut className="icon" onClick={handleLogout} />
                     </div>
                 }
@@ -81,6 +97,24 @@ export function SideNav() {
                 }
             </nav>
             <Outlet />
+            <Modal
+                isOpen={open}
+                onAfterOpen={_ => {}}
+                onRequestClose={ _ => setOpen(false) }
+                className="modal"
+                overlayClassName="overlay"
+                contentLabel="Example Modal"
+            >
+                <FiX className="close" onClick={ _ => setOpen(false) }/>
+                <div className="form-container">
+                    <h3 className="form-title">Criar grupo</h3>
+                    <form onSubmit={handleCreateGroup} className="form">
+                        <input className="input" type="text" placeholder="Digite o nome do grupo" value={name} onChange={e => setName(e.target.value)} />
+                        <input className="input" type="text" placeholder="Digite a url da imagem do grupo" value={url} onChange={e => setUrl(e.target.value)} />
+                        <button className="button" type="submit">Criar</button>
+                    </form>
+                </div>
+            </Modal>
         </div>
     )
 }

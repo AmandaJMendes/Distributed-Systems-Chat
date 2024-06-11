@@ -83,3 +83,78 @@ a:hover {
     background: var(--bg-light);
     transition: background 0.4s;
 }
+
+.modal {
+    position: relative;
+    top: 5rem;
+    left: 1rem;
+    width: calc(20vw - 2rem - 4px);
+    height: 20rem;
+    border-radius: 0.8rem;
+    background-color: var(--bg);
+
+    .close{
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0.6rem;
+        width: 1.4rem;
+        height: 1.4rem;
+
+        &:hover{
+            cursor: pointer;
+        }
+    }
+
+    .form-container{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        
+        .form-title{
+            margin-top: 2rem;
+        }
+        
+        .form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            padding: 2rem;
+            width: 100%;
+            border-radius: 0.8rem;
+    
+            .input {
+                height: 2.2rem;
+                border-radius: 0.4rem;
+                border: 0;
+                padding: 0 1rem;
+                font-size: 0.8rem;
+            }
+    
+            .button {
+                margin-top: 0.8rem;
+                height: 2rem;
+                
+                border-radius: 0.4rem;
+                border: 0;
+    
+                color: var(--white);
+    
+                &:hover {
+                    background: var(--bg-light);
+                    transition: background 0.2s;
+                }
+            }
+        }
+    }
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 80vw;
+    bottom: 0;
+    background-color: rgba($color: #454a50, $alpha: 0.4);
+  }

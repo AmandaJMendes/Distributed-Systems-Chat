@@ -57,7 +57,7 @@ export function Chat() {
     }
 
     const getChatName = () => {
-        if (!Object.keys(data.current_chat).length) return;
+        if (!Object.keys(data.current_chat ?? []).length) return;
         if (data.current_chat.group){
             return data.current_chat.name;
         }
@@ -76,7 +76,19 @@ export function Chat() {
         return chat.image[1-index] ? chat.image[1-index] : "/user.png";
     }
 
-    if (data.current_chat.length === 0) {
+    const handleLeaveGroup = () => {
+        client.send(JSON.stringify({
+            action: "leave",
+            user_id: user.user_id,
+            chat_id: data.current_chat.id
+        }));
+    }
+
+    const userInGroup = () => {
+        return data.current_chat.group && data.current_chat.users.includes(user.user_id);
+    }
+
+    if (!Object.keys(data.current_chat).length) {
         return (
             <div>Erro ao carregar o chat</div>
         )
@@ -88,10 +100,13 @@ export function Chat() {
             <div className='header'>
                 <img src={getChatImage(data.current_chat)} alt="user placeholder" className='image' />
                 <span>{getChatName()}</span>
-                <span className='display-time' onClick={_ => setShowTimestamp(!showTimestamp)}>Mostrar hora do envio</span>
+                <div className='actions'>
+                    { userInGroup() && <span className='leave-group' onClick={ _ => handleLeaveGroup() }>Sair do grupo</span> }
+                    <span className='display-time' onClick={ _ => setShowTimestamp(!showTimestamp)}>Mostrar hora do envio</span>
+                </div>
             </div>
             <div className='chat' id='chat'>
-                {Object.keys(data.current_chat).length && data.current_chat.messages.map((message: any) => (
+                { data.current_chat.messages.map((message: any) => (
                     <div className={`message-container ${message.user_id === user.user_id && "own-user"}`} key={message.timestamp}>
                         <img src={message.user_url ? message.user_url  : "/user.png"} alt="user placeholder" className='image' />
                         <p className='text'>

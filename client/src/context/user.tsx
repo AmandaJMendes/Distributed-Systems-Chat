@@ -53,7 +53,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
             const client = await getClient("context");
             client.onmessage = (response) => {
                 const parsedResponse = JSON.parse(response.data);
-
+                console.log(parsedResponse.action, parsedResponse.payload);
                 switch(parsedResponse.action){
                     case "login":
                         const { user_id, name, email, url } = parsedResponse.payload;
