@@ -19,7 +19,14 @@ def parse_message(message, websocket):
     action = data.get("action")
 
     if action == "login":
-        user_id = data.get("user_id",  str(uuid.uuid4()))
+        user_id = None
+
+        # Look for user on disk (sign in action)
+        for server_user_id in get_users().keys():
+            if get_users().get(server_user_id).get("email") == data.get("email"):
+                user_id = server_user_id
+                print(f"\nFound user {user_id}\n")
+
         user = {
             "user_id": user_id,
             "name": data.get("name"),
@@ -27,31 +34,38 @@ def parse_message(message, websocket):
             "url": data.get("url"),
         }
         
-        # Create user and send his DM to others
-        if not data.get("user_id"):
+        # Create user and send his DM to others (sign up action)
+        if not user_id:
+            user_id = str(uuid.uuid4())
+            user["user_id"] = user_id
+
             chats = get_chats()
-            for server_user_id in server_users.keys():
+            for signed_user_id in get_users().keys():
+                signed_user = get_users().get(signed_user_id)
                 chats[str(uuid.uuid4())] = {
-                    "name": f"{data.get("name")}|{server_users.get(server_user_id).get("name")}",
+                    "name": f"{data.get("name")}|{signed_user.get("name")}",
                     "group": False,
                     "messages": [],
                     "users": [user_id, server_user_id],
+                    "image": [data.get("url"), signed_user.get("url")]
                 }
                 
-                server_user_conn = server_users.get(server_user_id).get("connection", None)
+                server_user_conn = server_users.get(signed_user_id, {}).get("connection")
                 if server_user_conn:
                     send_message(server_user_conn, format_chats(chats, "chats", server_user_id))
             
             update_chats(chats)
-            send_message(
-                websocket,
-                json.dumps(
-                    {
-                        "payload": user,
-                        "action": "login",
-                    }
-                ),
-            )
+        
+        # Sign in, sign up or refresh connection
+        send_message(
+            websocket,
+            json.dumps(
+                {
+                    "payload": user,
+                    "action": "login",
+                }
+            ),
+        )
         
         # Persist user and update connection
         user["connection"] = websocket
@@ -59,18 +73,12 @@ def parse_message(message, websocket):
         server_users[user_id] = user
         update_users(user_id, user)
 
-
     elif action == "list_chats":
         send_message(websocket, format_chats(get_chats(), "chats", data.get("user_id")))
         
-    #elif action == "logout":
-    #    user_id = data.get("user_id")
-    #    if user_id in users:
-    #        del users[user_id]
-    #        for chat_id in chats:
-    #            chats[chat_id]["users"] = [
-    #                uid for uid in chats[chat_id]["users"] if uid != user_id
-    #            ]
+    elif action == "logout":
+        if data.get("user_id", None) in server_users:
+            del server_users[user_id]
         
     elif action == "join":
         chat_id = data.get("chat_id")

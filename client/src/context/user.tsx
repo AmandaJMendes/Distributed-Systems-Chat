@@ -2,13 +2,14 @@ import { ReactNode, createContext, useContext, useEffect, useState } from "react
 import { getClient } from "../utils/api";
 
 type User = {
-    user_id: number
+    user_id: string
     user_name: string
     user_email: string
+    user_url: string
 }
 
 interface UserContext {
-    logout: () => void
+    logout: (user_id: string) => void
     user: User
     data: any
     client: WebSocket
@@ -31,7 +32,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
 
     const [data, setData] = useState({
         chats: [],
-        current_chat: []
+        current_chat: {} as any
     });
     const [client, setClient] = useState<WebSocket>(null as unknown as WebSocket);
 
@@ -39,7 +40,8 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         localStorage.setItem("@chat_user", JSON.stringify(user));
         setUser(user);
     }
-    const logout = () => {
+    const logout = (user_id: string) => {
+        client.send(JSON.stringify({ user_id }))
         localStorage.removeItem("@chat_user");
         setUser({} as User);
     }
@@ -51,17 +53,29 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
             const client = await getClient("context");
             client.onmessage = (response) => {
                 const parsedResponse = JSON.parse(response.data);
-                setData(data => ({ ...data, [parsedResponse.action]: parsedResponse.payload }));
 
-                if (parsedResponse.action === "login") {
-                    const { user_id, name, email } = parsedResponse.payload;
-                    login({ user_name: name, user_id, user_email: email });
+                switch(parsedResponse.action){
+                    case "login":
+                        const { user_id, name, email, url } = parsedResponse.payload;
+                        setData(data => ({ ...data, login: parsedResponse.payload }));
+                        login({ user_name: name, user_id, user_email: email, user_url: url });
+                        break;
+
+                    case "current_chat":
+                        const chat = parsedResponse.payload;
+                        if (chat.id !== data.current_chat.id) return;
+                        
+                        setData(data => ({ ...data, current_chat: parsedResponse.payload[0] }));
+                        const chat_element = (document.getElementById("chat"));
+                        if (!chat_element) return;
+                        chat_element.scrollTop = chat_element.scrollHeight;
+                        break;
+                    default:
+                        setData(data => ({ ...data, [parsedResponse.action]: parsedResponse.payload }));
                 }
 
                 if (parsedResponse.action === "current_chat") {
-                    const chat = (document.getElementById("chat"));
-                    if (!chat) return;
-                    chat.scrollTop = chat.scrollHeight;
+                    
                 }
             }
             threadClient = client;

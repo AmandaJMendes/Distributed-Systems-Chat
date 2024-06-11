@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { FiLogOut, FiRss } from "react-icons/fi";
+import { FiLogOut, FiRss, FiPlusCircle } from "react-icons/fi";
 import { useUser } from "../../context/user";
 
 import "./styles.scss"
@@ -20,6 +20,7 @@ export function SideNav() {
 
             client.send(JSON.stringify({
                 action: "list_chats",
+                user_id: user.user_id
             }));
         }
 
@@ -27,14 +28,26 @@ export function SideNav() {
     }, [client]);
 
     const handleLogout = () => {
-        logout();
+        logout(user.user_id);
         navigate("/login");
     }
 
-    if (data.chats.length === 0) {
-        return (
-            <div>Não foi possível listar os chats</div>
-        )
+    const getChatName = (chat: any) => {
+        if (chat.group){
+            return chat.name;
+        }
+
+        const index = chat.users.indexOf(user.user_id);
+        return chat.name.split("|")[1-index];
+    }
+
+    const getChatImage = (chat: any) => {
+        if (chat.group){
+            return chat.image[0] ? chat.image[0] : "/user.png";
+        }
+
+        const index = chat.users.indexOf(user.user_id);
+        return chat.image[1-index] ? chat.image[1-index] : "/user.png";
     }
 
     return (
@@ -45,6 +58,7 @@ export function SideNav() {
                         <span className="connected">
                             Conectado
                         </span>
+                        <FiPlusCircle className="icon" onClick={handleLogout} />
                         <FiLogOut className="icon" onClick={handleLogout} />
                     </div>
                 }
@@ -60,8 +74,8 @@ export function SideNav() {
                 {
                     data.chats.map((chat: any) => (
                         <Link key={chat.id} to={`/chats/${chat.id}`}>
-                            <img src="/user.png" alt="user placeholder" className="image" />
-                            {chat.name}
+                            <img src={getChatImage(chat)} alt="user placeholder" className="image" />
+                            {getChatName(chat)}
                         </Link>
                     ))
                 }

@@ -17,7 +17,8 @@ def format_chats(chats: dict, action, user_id=None, send_messages = False, chat_
                     "name": chats[key]["name"],
                     "users": chats[key]["users"],
                     "messages": chats[key]["messages"],
-                    "group": chats[key]["group"]
+                    "group": chats[key]["group"],
+                    "image": chats[key]["image"]
                 }
             )
             continue
@@ -27,7 +28,8 @@ def format_chats(chats: dict, action, user_id=None, send_messages = False, chat_
                 "id": key,
                 "name": chats[key]["name"],
                 "users": chats[key]["users"],
-                "group": chats[key]["group"]
+                "group": chats[key]["group"],
+                "image": chats[key]["image"]
             }
         )
     

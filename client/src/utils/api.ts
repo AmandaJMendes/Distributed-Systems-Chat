@@ -8,12 +8,13 @@ export const getClient = (origin = "unknown") => new Promise<WebSocket>((res, re
 
             const maybeUser = localStorage.getItem("@chat_user");
             if (maybeUser) {
-                const { user_id, user_name, user_email } = JSON.parse(maybeUser);
+                const { user_id, user_name, user_email, user_url } = JSON.parse(maybeUser);
                 webSocketClient.send(JSON.stringify({
                     action: "login",
                     user_id,
-                    user_name,
-                    user_email
+                    name: user_name,
+                    email: user_email,
+                    url: user_url,
                 }));
             }
 

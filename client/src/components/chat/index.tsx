@@ -61,9 +61,19 @@ export function Chat() {
         if (data.current_chat.group){
             return data.current_chat.name;
         }
-
+        
         const index = data.current_chat.users.indexOf(user.user_id);
         return data.current_chat.name.split("|")[1-index];
+    }
+
+    const getChatImage = (chat: any) => {
+        if (!Object.keys(data.current_chat).length) return;
+        if (chat.group){
+            return chat.image[0] ? chat.image[0] : "/user.png";
+        }
+
+        const index = chat.users.indexOf(user.user_id);
+        return chat.image[1-index] ? chat.image[1-index] : "/user.png";
     }
 
     if (data.current_chat.length === 0) {
@@ -76,7 +86,7 @@ export function Chat() {
 
         <main>
             <div className='header'>
-                <img src="/user.png" alt="user placeholder" className='image' />
+                <img src={getChatImage(data.current_chat)} alt="user placeholder" className='image' />
                 <span>{getChatName()}</span>
                 <span className='display-time' onClick={_ => setShowTimestamp(!showTimestamp)}>Mostrar hora do envio</span>
             </div>
