@@ -17,7 +17,7 @@ signed_users = {} # keys: user id | values: username
 def parse_message(message, websocket):
     data = json.loads(message)
     action = data.get("action")
-
+    
     if action == "login":
         user_id = None
 
@@ -51,9 +51,9 @@ def parse_message(message, websocket):
                 }
                 
                 server_user_conn = signed_users.get(signed_user_id, {}).get("connection")
-                print(signed_user_id, server_user_conn)
+                
                 if server_user_conn:
-                    send_message(server_user_conn, format_chats(chats, "chats", signed_user_id))
+                    send_message(server_user_conn, format_chats(chats, "chats", signed_users, user_id=signed_user_id))
             
             update_chats(chats)
         
@@ -67,7 +67,23 @@ def parse_message(message, websocket):
                 }
             ),
         )
-        
+
+        # Tell online clients that current user is now online
+        for signed_user_id in signed_users.keys():
+            if signed_user_id == user_id: continue
+            send_message(
+                signed_users.get(signed_user_id).get("connection"),
+                json.dumps(
+                    {
+                        "payload": {
+                            "server_user_id": user_id,
+                            "connected": True
+                        },
+                        "action": "update_active_users",
+                    }
+                ),
+            )
+  
         # Persist user and update connection
         user["connection"] = websocket
         user.pop("user_id")
@@ -75,19 +91,36 @@ def parse_message(message, websocket):
         update_users(user_id, user)
 
     elif action == "list_chats":
-        send_message(websocket, format_chats(get_chats(), "chats", data.get("user_id")))
-        
+        send_message(websocket, format_chats(get_chats(), "chats", signed_users, user_id=data.get("user_id")))
+
     elif action == "logout":
-        if data.get("user_id", None) in signed_users:
+        user_id = data.get("user_id")
+        if user_id in signed_users.keys():
             del signed_users[user_id]
+        
+            for signed_user in signed_users.values():
+                if not signed_user.get("connection"): continue
+                send_message(
+                    signed_user.get("connection"),
+                    json.dumps(
+                        {
+                            "payload": {
+                                "server_user_id": user_id,
+                                "connected": False
+                            },
+                            "action": "update_active_users",
+                        }
+                    ),
+                )
         
     elif action == "join":
         chat_id = data.get("chat_id")
+        user_id = data.get("user_id")
         
         send_message(
             websocket,
             format_chats(
-                get_chats(), "current_chat", send_messages=True, chat_id=chat_id
+                get_chats(), "current_chat", signed_users, user_id=user_id ,send_messages=True, chat_id=chat_id
             ),
         )
 
@@ -102,11 +135,12 @@ def parse_message(message, websocket):
         }
 
         update_chats(chats)
-    
+
+        # Tell other users about the created group
         for server_user_id in signed_users.keys():
             conn = signed_users.get(server_user_id).get("connection")
             if conn:
-                send_message(conn, format_chats(get_chats(), "chats", user_id=server_user_id))
+                send_message(conn, format_chats(get_chats(), "chats", signed_users, user_id=server_user_id))
 
     elif action == "leave":
         chat_id = data.get("chat_id")
@@ -118,10 +152,11 @@ def parse_message(message, websocket):
                 uid for uid in chats.get(chat_id)["users"] if uid != user_id
             ]
             
+            # Retrieve updated group to current_user (could be done in frontend)
             send_message(
                 websocket,
                 format_chats(
-                    chats, "current_chat", send_messages=True, chat_id=chat_id
+                    chats, "current_chat", signed_users, user_id=user_id, send_messages=True, chat_id=chat_id
                 ),
             )
                
@@ -146,6 +181,7 @@ def parse_message(message, websocket):
 
         update_chats(chats)
 
+        # Notify every user in the group about the message
         for usr_id in chats.get(chat_id, {}).get("users", []):
             client = signed_users.get(usr_id, {}).get("connection")
 
@@ -153,7 +189,7 @@ def parse_message(message, websocket):
                 send_message(
                     client,
                     format_chats(
-                        chats, "current_chat", send_messages=True, chat_id=chat_id
+                        chats, "current_chat", signed_users, user_id=usr_id, send_messages=True, chat_id=chat_id
                     ),
                 )
         

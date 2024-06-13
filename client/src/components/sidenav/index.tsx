@@ -66,9 +66,13 @@ export function SideNav() {
         return chat.image[1-index] ? chat.image[1-index] : "/user.png";
     }
 
+    const displayUnreads = (chat: any) => {
+        return chat.unreads && chat.unreads > 0;
+    }
+
     return (
         <div className="container">
-            <nav>
+            <nav className="nav">
                 {client && client.readyState === client.OPEN &&
                     <div className="status">
                         <span className="connected">
@@ -89,9 +93,11 @@ export function SideNav() {
                 }
                 {
                     data.chats.map((chat: any) => (
-                        <Link key={chat.id} to={`/chats/${chat.id}`}>
+                        <Link className="link" key={chat.id} to={`/chats/${chat.id}`}>
                             <img src={getChatImage(chat)} alt="user placeholder" className="image" />
-                            {getChatName(chat)}
+                            {getChatName(chat)} 
+                            { chat.is_dm_user_connected && <span className="connected">🟢</span> }
+                            { displayUnreads(chat) > 0 && <span className="unreads">{chat.unreads}</span> }
                         </Link>
                     ))
                 }

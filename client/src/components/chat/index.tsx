@@ -88,6 +88,10 @@ export function Chat() {
         return data.current_chat.group && data.current_chat.users.includes(user.user_id);
     }
 
+    const displayOnline = () => {
+        return !data.current_chat.group && data.current_chat.is_dm_user_connected;
+    }
+
     if (!Object.keys(data.current_chat).length) {
         return (
             <div>Erro ao carregar o chat</div>
@@ -99,7 +103,8 @@ export function Chat() {
         <main>
             <div className='header'>
                 <img src={getChatImage(data.current_chat)} alt="user placeholder" className='image' />
-                <span>{getChatName()}</span>
+                <span>{ getChatName() }</span>
+                { displayOnline() && <span className='online'>&nbsp;- Online</span>  }
                 <div className='actions'>
                     { userInGroup() && <span className='leave-group' onClick={ _ => handleLeaveGroup() }>Sair do grupo</span> }
                     <span className='display-time' onClick={ _ => setShowTimestamp(!showTimestamp)}>Mostrar hora do envio</span>
