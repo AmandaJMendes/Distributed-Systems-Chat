@@ -63,7 +63,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
     useEffect(() => {
         let threadClient: WebSocket;
         const connect = async () => {
-            console.log("Attempting to connect to server")
+            //console.log("Attempting to connect to server")
             const client = await getClient("context");
             client.onmessage = (response) => {
                 const parsedResponse = JSON.parse(response.data);
@@ -96,13 +96,14 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
                         
                         setData(data => {
                             const updatedChats = [...data.chats];
+                            const current_chat = window.location.href.includes(chat.id) ? chat : data.current_chat;
                             
                             const updated_chat: any = updatedChats.find((_chat: any) => _chat.id === chat.id);
                             if (updated_chat && window.location.href.endsWith(updated_chat.id)) {
                                 updated_chat.unreads = 0;
                             }
 
-                            return { ...data, chats: updatedChats, current_chat: chat };
+                            return { ...data, chats: updatedChats, current_chat };
                         });
                         
                         const chat_element = (document.getElementById("chat"));
@@ -137,6 +138,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         }
 
         const checkClient = setInterval(() => {
+            //if (threadClient) threadClient.send(JSON.stringify({ action: "ping" }));
             if (!threadClient || (threadClient && threadClient.readyState !== threadClient.OPEN)) {
                 setClient(null as unknown as WebSocket);
                 connect();

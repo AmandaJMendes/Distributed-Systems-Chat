@@ -16,6 +16,7 @@ def receive_message(client_socket):
     message_bytes = bytearray()
     for byte in client_socket.recv(length):
         message_bytes.append(byte ^ masks[len(message_bytes) % 4])
+    
     return message_bytes.decode('utf-8')
 
 def send_message(client_socket, message):

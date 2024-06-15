@@ -3,29 +3,28 @@ import threading
 import json
 import time
 import uuid
+from colorama import Fore
 
 from rawsockets import receive_message, send_message
-from websockets import parse_headers, websocket_handshake
+from customwebsockets import parse_headers, websocket_handshake
 from messages import format_chats
 
 from disk.helpers import update_users, get_users, update_chats, get_chats
 
-# chats -> keys: chat id | values: {"messages": [(user_id, timestamp, text)], "users": [(user_id)]}
-signed_users = {} # keys: user id | values: username
 
-
-def parse_message(message, websocket):
+def parse_message(message, websocket, signed_users):
     data = json.loads(message)
     action = data.get("action")
     
-    if action == "login":
+    if action == "ping":
+        pass
+    elif action == "login":
         user_id = None
 
         # Look for user on disk (sign in action)
         for server_user_id in get_users().keys():
             if get_users().get(server_user_id).get("email") == data.get("email"):
                 user_id = server_user_id
-                print(f"\nFound user {user_id}\n")
 
         user = {
             "user_id": user_id,
@@ -193,36 +192,44 @@ def parse_message(message, websocket):
                     ),
                 )
         
-def handle_client(client_socket):
-    print("New client connected")
+def handle_client(client_socket, users, kill_threads):
     request = client_socket.recv(1024).decode("utf-8")
     headers = parse_headers(request)
     websocket_handshake(client_socket, headers)
+    
     while True:
         try:
+            if kill_threads[0]: break
             message = receive_message(client_socket)
             if message:
                 # print(message)
-                parse_message(message, client_socket)
+                parse_message(message, client_socket, users)
             else:
                 break
         except Exception as e:
-            print(f"Error: {e}")
-            break
+            if "'utf-8' codec can't decode" not in str(e):
+                break
+
     client_socket.close()
 
-
-def start_server():
+def start_server(port, users):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server_socket.bind(("localhost", 3000))
+    
+    server_socket.bind(("localhost", int(port)))
     server_socket.listen(5)
-    print("Server started on ws://localhost:3000")
-    while True:
-        client_socket, _ = server_socket.accept()
-        client_thread = threading.Thread(target=handle_client, args=(client_socket,))
-        client_thread.start()
+    server_socket.settimeout(20)
+    kill_threads = [False]
+    print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Server started on ws://localhost:{port} 🚀")
 
+    try:
+        while True:
+            client_socket, _ = server_socket.accept()
+            client_thread = threading.Thread(target=handle_client, args=(client_socket, users, kill_threads,))
+            client_thread.start()
+    except TimeoutError as te:
+        pass
 
-if __name__ == "__main__":
-    start_server()
+    server_socket.close()
+    kill_threads[0] = True
+    print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Server on ws://localhost:{port} is down ⛔")
