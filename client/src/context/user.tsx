@@ -143,7 +143,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
                 setClient(null as unknown as WebSocket);
                 connect();
             }
-        }, 2000);
+        }, 5000);
 
         return () => clearInterval(checkClient);
     }, []);
