@@ -216,7 +216,7 @@ def start_server(port, users):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
-    server_socket.bind(("localhost", int(port)))
+    server_socket.bind(("0.0.0.0", int(port)))
     server_socket.listen(5)
     server_socket.settimeout(20)
     kill_threads = [False]

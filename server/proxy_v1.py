@@ -1,4 +1,3 @@
-import websocket
 from threading import Thread
 from time import sleep
 from colorama import Fore
@@ -41,6 +40,7 @@ def auto_starter():
 
 
 if __name__ == "__main__":
+    print("Hey there")
     t = Thread(target=auto_starter)
     t.start()
     t.join()
