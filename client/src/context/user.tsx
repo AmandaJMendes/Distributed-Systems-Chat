@@ -138,12 +138,11 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         }
 
         const checkClient = setInterval(() => {
-            //if (threadClient) threadClient.send(JSON.stringify({ action: "ping" }));
             if (!threadClient || (threadClient && threadClient.readyState !== threadClient.OPEN)) {
                 setClient(null as unknown as WebSocket);
                 connect();
             }
-        }, 5000);
+        }, 4250);
 
         return () => clearInterval(checkClient);
     }, []);

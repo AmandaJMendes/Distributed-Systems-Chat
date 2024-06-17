@@ -205,9 +205,11 @@ def handle_client(client_socket, users, kill_threads):
                 # print(message)
                 parse_message(message, client_socket, users)
             else:
+                print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Closing connection with client cause message was empty")
                 break
         except Exception as e:
             if "'utf-8' codec can't decode" not in str(e):
+                print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Closing connection with client case decode error ocurred: {e}")
                 break
 
     client_socket.close()

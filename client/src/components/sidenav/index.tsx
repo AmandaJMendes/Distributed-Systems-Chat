@@ -28,7 +28,17 @@ export function SideNav() {
             }));
         }
 
+        const ping = setInterval(() => {
+            if (!client || (client && client.readyState !== client.OPEN)) return;
+
+            client.send(JSON.stringify({
+                action: "ping",
+            }));
+        }, 500);
+
         getChats();
+
+        return () => clearInterval(ping);
     }, [client]);
 
     const handleLogout = () => {
