@@ -1,0 +1,32 @@
+services:
+  client:
+    container_name: chat-client
+    image: hoosin/alpine-nginx-nodejs:latest
+    command: >
+      sh -c "npm i && npm run build && cp -r ./dist/* /usr/share/nginx/html && echo done && nginx -g 'daemon off;'"
+    working_dir: /usr/src/app
+    volumes:
+      - ./client/:/usr/src/app
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    networks:
+      - chat
+  
+  api:
+    container_name: chat-api
+    image: python:slim-bullseye
+    working_dir: /usr/src/app
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+    volumes:
+      - ./server/:/usr/src/app
+    command: >
+      bash -c "pip install colorama && ls && python proxy_v1.py"
+    networks:
+      - chat
+
+networks: {chat: {}}

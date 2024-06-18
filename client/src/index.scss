@@ -3,9 +3,12 @@
   --theme-light: #BA80DC;
   --theme-dark: #470070;
   --bg: #23272E;
-  --bg-light: #2C333B;
-  --white: #bdc0c3;
-  --gray: #768390;
+  --bg-light: #35393e;
+  --bg-light: #35393e;
+  --white: #ffffff;
+  --gray-100: #bdc0c3;
+  --gray-200: #768390;
+  --gray-700: #454a50;
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-weight: 400;
@@ -27,7 +30,7 @@
   outline: none;
 }
 
-button:hover, link:hover {
+button:hover,
+link:hover {
   cursor: pointer;
 }
-
