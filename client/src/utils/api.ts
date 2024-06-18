@@ -1,6 +1,6 @@
 
 export const getClient = (origin = "unknown") => new Promise<WebSocket>((res, rej) => {
-    let webSocketClient: WebSocket = new WebSocket(`ws://35.174.149.163:4000`);
+    let webSocketClient: WebSocket = new WebSocket(`ws://chat.joaomellof.com:4000`);
     let counter = 0;
     
     let port = 3000;
@@ -9,12 +9,12 @@ export const getClient = (origin = "unknown") => new Promise<WebSocket>((res, re
     const thread = setInterval(() => {
         if(oldPort !== port){
             webSocketClient.close()
-            webSocketClient = new WebSocket(`ws://35.174.149.163:${port}`);
+            webSocketClient = new WebSocket(`ws://chat.joaomellof.com:${port}`);
             oldPort = port;
         }
 
         if (webSocketClient.readyState === webSocketClient.OPEN) {
-            console.log(`client from ${origin} is connected on ws://35.174.149.163:${port}!`)
+            console.log(`client from ${origin} is connected on ws://chat.joaomellof.com:${port}!`)
 
             const maybeUser = localStorage.getItem("@chat_user");
             if (maybeUser) {
