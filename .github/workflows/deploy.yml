@@ -37,8 +37,4 @@ jobs:
       - name: Create CodeDeploy Deployment
         id: deploy
         run: |
-          aws deploy create-deployment \
-          --application-name chat \ 
-          --deployment-group-name chat-deployment-group \
-          --deployment-config-name CodeDeployDefault.AllAtOnce \
-          --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
+          aws deploy create-deployment --application-name chat --deployment-group-name chat-deployment-group --deployment-config-name CodeDeployDefault.AllAtOnce --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
