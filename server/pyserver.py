@@ -52,7 +52,9 @@ def parse_message(message, websocket, signed_users):
                 server_user_conn = signed_users.get(signed_user_id, {}).get("connection")
                 
                 if server_user_conn:
-                    send_message(server_user_conn, format_chats(chats, "chats", signed_users, user_id=signed_user_id))
+                    try:
+                        send_message(server_user_conn, format_chats(chats, "chats", signed_users, user_id=signed_user_id))
+                    except: pass
             
             update_chats(chats)
         
@@ -70,18 +72,20 @@ def parse_message(message, websocket, signed_users):
         # Tell online clients that current user is now online
         for signed_user_id in signed_users.keys():
             if signed_user_id == user_id: continue
-            send_message(
-                signed_users.get(signed_user_id).get("connection"),
-                json.dumps(
-                    {
-                        "payload": {
-                            "server_user_id": user_id,
-                            "connected": True
-                        },
-                        "action": "update_active_users",
-                    }
-                ),
-            )
+            try:
+                send_message(
+                    signed_users.get(signed_user_id).get("connection"),
+                    json.dumps(
+                        {
+                            "payload": {
+                                "server_user_id": user_id,
+                                "connected": True
+                            },
+                            "action": "update_active_users",
+                        }
+                    ),
+                )
+            except: pass
   
         # Persist user and update connection
         user["connection"] = websocket
@@ -99,18 +103,20 @@ def parse_message(message, websocket, signed_users):
         
             for signed_user in signed_users.values():
                 if not signed_user.get("connection"): continue
-                send_message(
-                    signed_user.get("connection"),
-                    json.dumps(
-                        {
-                            "payload": {
-                                "server_user_id": user_id,
-                                "connected": False
-                            },
-                            "action": "update_active_users",
-                        }
-                    ),
-                )
+                try:
+                    send_message(
+                        signed_user.get("connection"),
+                        json.dumps(
+                            {
+                                "payload": {
+                                    "server_user_id": user_id,
+                                    "connected": False
+                                },
+                                "action": "update_active_users",
+                            }
+                        ),
+                    )
+                except: pass
         
     elif action == "join":
         chat_id = data.get("chat_id")
@@ -139,7 +145,9 @@ def parse_message(message, websocket, signed_users):
         for server_user_id in signed_users.keys():
             conn = signed_users.get(server_user_id).get("connection")
             if conn:
-                send_message(conn, format_chats(get_chats(), "chats", signed_users, user_id=server_user_id))
+                try:
+                    send_message(conn, format_chats(get_chats(), "chats", signed_users, user_id=server_user_id))
+                except: pass
 
     elif action == "leave":
         chat_id = data.get("chat_id")
@@ -185,12 +193,14 @@ def parse_message(message, websocket, signed_users):
             client = signed_users.get(usr_id, {}).get("connection")
 
             if client:
-                send_message(
-                    client,
-                    format_chats(
-                        chats, "current_chat", signed_users, user_id=usr_id, send_messages=True, chat_id=chat_id
-                    ),
-                )
+                try:
+                    send_message(
+                        client,
+                        format_chats(
+                            chats, "current_chat", signed_users, user_id=usr_id, send_messages=True, chat_id=chat_id
+                        ),
+                    )
+                except: pass
         
 def handle_client(client_socket, users, kill_threads):
     request = client_socket.recv(1024).decode("utf-8")
