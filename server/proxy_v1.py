@@ -6,7 +6,7 @@ from time import sleep
 from pyserver import start_server
 
 SERVER_TIMEOUT = 20
-DELAY_TO_LAUNCH = 2
+DELAY_TO_LAUNCH = 3
 
 # Currently logged users
 signed_users = {} 
