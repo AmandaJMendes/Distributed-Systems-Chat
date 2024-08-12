@@ -16,7 +16,9 @@ def parse_message(message, websocket, signed_users):
     data = json.loads(message)
     action = data.get("action")
     
-    if action == "login":
+    if action == "ping":
+        pass
+    elif action == "login":
         user_id = None
 
         # Look for user on disk (sign in action)
@@ -200,7 +202,7 @@ def parse_message(message, websocket, signed_users):
                     )
                 except: pass
         
-def handle_client(client_socket, users, kill_threads):
+def handle_client(client_socket, users, kill_threads, users_lock, chats_lock):
     request = client_socket.recv(1024).decode("utf-8")
     headers = parse_headers(request)
     websocket_handshake(client_socket, headers)
@@ -210,20 +212,21 @@ def handle_client(client_socket, users, kill_threads):
             if kill_threads[0]: break
             message = receive_message(client_socket)
             if message:
-                # print(message)
+                users_lock.acquire()
+                chats_lock.acquire()
                 parse_message(message, client_socket, users)
-            else:
-                pass
-                #print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Closing connection with client cause message was empty")
-                #break
+                users_lock.release()
+                chats_lock.release()
         except Exception as e:
+            users_lock.release()
+            chats_lock.release()
             if "'utf-8' codec can't decode" not in str(e):
                 print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Closing connection with client case decode error ocurred: {e}")
                 break
 
     client_socket.close()
 
-def start_server(port, users):
+def start_server(port, users, users_lock, chats_lock):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     
@@ -236,7 +239,7 @@ def start_server(port, users):
     try:
         while True:
             client_socket, _ = server_socket.accept()
-            client_thread = threading.Thread(target=handle_client, args=(client_socket, users, kill_threads,))
+            client_thread = threading.Thread(target=handle_client, args=(client_socket, users, kill_threads, users_lock, chats_lock))
             client_thread.start()
     except TimeoutError as te:
         pass
