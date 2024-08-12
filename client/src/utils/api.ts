@@ -37,7 +37,7 @@ export const getClient = (origin = "unknown") => new Promise<WebSocket>((res, re
             counter++;
         }
 
-        if (counter % 10 === 0) {
+        if (counter % 25 === 0) {
             port = port === 3000 ? 4000 : 3000;
         }
     }, 75)
