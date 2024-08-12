@@ -16,9 +16,7 @@ def parse_message(message, websocket, signed_users):
     data = json.loads(message)
     action = data.get("action")
     
-    if action == "ping":
-        pass
-    elif action == "login":
+    if action == "login":
         user_id = None
 
         # Look for user on disk (sign in action)
