@@ -64,7 +64,7 @@ export function UserContextProvider({ children }: UserContextProviderProps) {
         let threadClient: WebSocket;
         const connect = async () => {
             //console.log("Attempting to connect to server")
-            const client = await getClient("context");
+            const client = await getClient();
             client.onmessage = (response) => {
                 const parsedResponse = JSON.parse(response.data);
                 console.log(parsedResponse.action, parsedResponse.payload);
