@@ -18,6 +18,7 @@ def auto_starter():
 
     server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock))
     server_thread_1.start()
+    sleep(SERVER_TIMEOUT/5)
     server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock))
     server_thread_2.start()
 
