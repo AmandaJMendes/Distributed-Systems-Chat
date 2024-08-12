@@ -6,7 +6,7 @@ from time import sleep
 from pyserver import start_server
 
 SERVER_TIMEOUT = 20
-DELAY_TO_LAUNCH = 1
+DELAY_TO_LAUNCH = 2
 
 # Currently logged users
 signed_users = {} 
@@ -18,6 +18,7 @@ def auto_starter():
 
     server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock))
     server_thread_1.start()
+    sleep(SERVER_TIMEOUT/2)
     server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock))
     server_thread_2.start()
 

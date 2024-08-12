@@ -1,7 +1,7 @@
 
 export const getClient = () => new Promise<WebSocket>((res, rej) => {
     let webSocketClient: WebSocket = new WebSocket(`ws://chat.joaomellof.com:4000`);
-    let counter = 0;
+    let counter = 1;
     let port = 4000;
 
     const thread = setInterval(() => {
@@ -28,7 +28,7 @@ export const getClient = () => new Promise<WebSocket>((res, rej) => {
 
             res(webSocketClient);
             clearInterval(thread);
-        } else if (counter === 50) {
+        } else if (counter === 51) {
             rej("Failed to connect to server")
             clearInterval(thread);
         } else {
