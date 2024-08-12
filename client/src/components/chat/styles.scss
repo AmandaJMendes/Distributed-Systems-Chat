@@ -52,7 +52,7 @@ main {
     }
 
     .chat {
-        background-image: url("/public/chat.png");
+        background-image: url("/chat.png");
         height: 87vh;
         padding: 2rem;
         overflow-y: auto;
@@ -121,6 +121,7 @@ main {
             margin-right: 0.6rem;
             padding: 0 1rem;
             font-size: 1rem;
+            color: var(--white);
         }
 
         .send-button {
@@ -140,7 +141,4 @@ main {
             }
         }
     }
-
-
-
 }
