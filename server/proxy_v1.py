@@ -11,15 +11,16 @@ DELAY_TO_LAUNCH = 3
 # Currently logged users
 signed_users = {} 
 users_lock = Lock()
-chats_lock = Lock()
+chats_lock, signed_users_lock = Lock()
+signed_users_lock = Lock()
 
 def auto_starter():
     global signed_users
 
-    server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock))
+    server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock, signed_users_lock))
     server_thread_1.start()
     sleep(SERVER_TIMEOUT/2)
-    server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock))
+    server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock, signed_users_lock))
     server_thread_2.start()
 
     while True:
@@ -27,13 +28,13 @@ def auto_starter():
             if not server_thread_1.is_alive():
                 sleep(DELAY_TO_LAUNCH)
                 print(f"\n{Fore.LIGHTMAGENTA_EX + "Auto scaler thread\n" + Fore.WHITE + " * "}Restarting server on localhost:3000 🔁\n * Main server is now on localhost:4000")
-                server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock))
+                server_thread_1 = Thread(target=start_server, args=(3000, signed_users, users_lock, chats_lock, signed_users_lock))
                 server_thread_1.start()
         
             if not server_thread_2.is_alive():
                 sleep(DELAY_TO_LAUNCH)
                 print(f"\n{Fore.LIGHTMAGENTA_EX + "Auto scaler thread\n" + Fore.WHITE + " * "}Restarting server on localhost:4000 🔁\n * Main server is now on localhost:3000")
-                server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock))
+                server_thread_2 = Thread(target=start_server, args=(4000, signed_users, users_lock, chats_lock, signed_users_lock))
                 server_thread_2.start()
 
             sleep(0.1)
