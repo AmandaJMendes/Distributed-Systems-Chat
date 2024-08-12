@@ -11,7 +11,7 @@ DELAY_TO_LAUNCH = 3
 # Currently logged users
 signed_users = {} 
 users_lock = Lock()
-chats_lock, signed_users_lock = Lock()
+chats_lock = Lock()
 signed_users_lock = Lock()
 
 def auto_starter():
