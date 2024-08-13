@@ -34,5 +34,5 @@ export const getClient = () => new Promise<WebSocket>((res, rej) => {
         } else {
             counter++;
         }
-    }, 75)
+    }, 50)
 })
