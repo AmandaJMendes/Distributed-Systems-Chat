@@ -216,22 +216,19 @@ def handle_client(client_socket, users, kill_threads, users_lock, chats_lock, si
                 chats_lock.acquire()
                 signed_users_lock.acquire()
                 parse_message(message, client_socket, users)
-                signed_users_lock.acquire()
+                signed_users_lock.release()
                 users_lock.release()
                 chats_lock.release()
         except Exception as e:
-            if signed_users_lock.locked():
-                signed_users_lock.release()
-            if users_lock.locked():
-                users_lock.release()
-            if chats_lock.locked():
-                chats_lock.release()
             if "'utf-8' codec can't decode" not in str(e):
                 print(f"\n{Fore.LIGHTYELLOW_EX + "End server process\n" + Fore.WHITE + " * "}Closing connection with client case decode error ocurred: {e}")
-                signed_users_lock.acquire()
-                users = {}
-                signed_users_lock.release()
                 break
+    if signed_users_lock.locked():
+        signed_users_lock.release()
+    if users_lock.locked():
+        users_lock.release()
+    if chats_lock.locked():
+        chats_lock.release()
 
     client_socket.close()
 
